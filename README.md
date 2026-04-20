@@ -1,101 +1,92 @@
 # refactor-llm-wiki
 
-Give Claude Code a searchable long-term memory for any project — in one paste.
+A setup prompt that turns Claude Code into a persistent, compounding knowledge base — maintained entirely by AI.
+
+Inspired by [Andrej Karpathy's LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
 
 ---
 
-## What it does
+## The idea
 
-You paste one prompt into Claude Code. Claude asks you 4 questions. You answer them. Done.
+Most LLM tools re-derive knowledge from scratch on every question. This is different.
 
-You end up with:
-- A `/wiki` slash command that searches your personal notes folder
-- A `CLAUDE.md` that tells Claude to use your wiki for context
-- A starter note to get you going
+The LLM **builds and maintains a wiki** — a structured, interlinked collection of markdown files. When you add a source, it doesn't just index it. It reads it, extracts key information, and integrates it into the existing wiki: updating entity pages, flagging contradictions, strengthening the synthesis. The knowledge compounds.
 
-After that, you grow your wiki by dropping `.md` files into a folder. Claude finds them automatically with `/wiki topic`.
+You never write the wiki. The LLM does.  
+You source, explore, and ask questions.  
+The LLM summarizes, cross-references, files, and keeps everything current.
+
+In practice: **Obsidian open on one side, Claude Code on the other.** The LLM edits the wiki, you browse it in real time — following links, checking the graph view, reading updated pages.
+
+---
+
+## What gets set up
+
+Paste the prompt → answer 4 questions → done.
+
+**Folder structure inside your Obsidian vault (or any folder):**
+```
+[vault]/
+├── raw/          ← drop source documents here (immutable)
+├── wiki/
+│   ├── index.md  ← LLM-maintained catalog of all pages
+│   └── log.md    ← append-only operation log
+└── CLAUDE.md     ← the schema: conventions, workflows, rules
+```
+
+**Three Claude Code slash commands:**
+```
+/ingest raw/[file]    ← process a new source into the wiki
+/wiki [topic]         ← query the wiki for answers
+/lint                 ← health-check, find contradictions and gaps
+```
 
 ---
 
 ## How to use
 
-1. Open Claude Code in any project folder (or an empty one)
-2. Copy the prompt below and paste it into the chat
-3. Answer 4 quick questions
-4. Type `/wiki` to test it
+1. Open Claude Code in any folder (your Obsidian vault, a project, anywhere)
+2. Open `prompt.md` from this repo and paste the entire contents into Claude Code
+3. Answer 4 questions about your name, wiki topic, vault path, and folder names
+4. Claude builds the environment — CLAUDE.md, folder structure, and all three skills
+5. Drop a file into `raw/` and run `/ingest raw/[filename]` to start
 
 ---
 
-## The prompt
+## The three operations
 
-Copy everything in the block below and paste it into Claude Code:
+**`/ingest`** — Process a new source  
+Reads the document, discusses takeaways with you, writes a summary page, updates the index, touches 3–10 entity/concept pages, flags contradictions, appends to the log. A single source might update 10–15 wiki pages.
 
-```
-Set up a personal AI wiki for this Claude Code workspace.
+**`/wiki`** — Query the wiki  
+Reads the index first, finds relevant pages, synthesizes an answer with citations. Good answers get filed back into the wiki as new pages — your explorations compound just like ingested sources do.
 
-Walk me through 4 quick questions, one at a time — wait for my answer before asking the next:
-
-1. What's your name?
-2. What is this project or workspace for? (one or two sentences)
-3. Where should wiki files be stored? Suggest ~/Documents/[project-name]-wiki, but I can pick any path.
-4. What kinds of notes will you keep here? (examples: architecture decisions, meeting notes, research, specs)
-
-After I answer all 4, create these three things:
+**`/lint`** — Health-check  
+Finds contradictions between pages, stale claims, orphan pages, missing cross-references, and data gaps. Suggests new sources to find and new questions to ask.
 
 ---
 
-.claude/skills/wiki/skill.md — a /wiki skill pointed at my chosen folder:
-- /wiki with no args → list available files and summarize what's there
-- /wiki <topic> → search files by name and content, read the most relevant one, answer the question
-- Fall back to raw source files only if the wiki folder has no answer
+## Why Obsidian
 
----
+The wiki is just a folder of markdown files — it works without Obsidian. But Obsidian adds:
 
-CLAUDE.md — create it if it doesn't exist, or append to it if it does. Include:
-- My project description (from question 2)
-- A clear instruction: always use /wiki [topic] before answering questions about project context, decisions, or history
-
----
-
-[wiki-folder]/getting-started.md — a short welcome note, personalized with my name, that explains:
-- What this wiki is and why it exists
-- How to add notes (create any .md file in the folder)
-- How to search with /wiki topic
-
----
-
-When everything is created, show me a short summary of what was set up and one example of how to use /wiki.
-```
-
----
-
-## How it works
-
-Claude Code has a [skills system](https://docs.anthropic.com/en/docs/claude-code/slash-commands) where `.md` files in `.claude/skills/` become slash commands. This prompt wires up a `/wiki` skill that points at a folder you own — no plugins, no extensions, no sync required.
-
-Your wiki folder is just a folder of markdown files. Add a file, and Claude can find it on the next `/wiki` call.
-
----
-
-## Example workflow
-
-```
-/wiki                          → lists your notes
-/wiki auth decisions           → finds your auth architecture note
-/wiki why did we choose X      → searches by content, not just filename
-```
+- **Graph view** — see which pages are hubs, which are orphans, how knowledge connects
+- **`[[WikiLink]]` navigation** — every link the LLM writes becomes a clickable link
+- **Obsidian Web Clipper** — browser extension that converts articles to markdown, ready to drop into `raw/`
+- **Dataview plugin** — query YAML frontmatter the LLM writes; generate dynamic tables and lists
 
 ---
 
 ## Files in this repo
 
 ```
-prompt.md              the raw prompt (same as above, easy to copy)
+prompt.md                   ← paste this into Claude Code to set up
 example-wiki/
-  getting-started.md   sample starter note
-  decisions.md         template for logging architecture decisions
+  getting-started.md        ← what the wiki folder looks like after setup
+  decisions.md              ← template for architecture decision records
 ```
 
 ---
 
-Made by [@razvanneculai](https://github.com/razvanneculai)
+Made by [@razvanneculai](https://github.com/razvanneculai)  
+Based on the LLM Wiki pattern by [@karpathy](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
